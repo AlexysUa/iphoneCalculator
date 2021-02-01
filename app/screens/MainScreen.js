@@ -52,72 +52,85 @@ function MainScreen() {
           break;
         }
         if(calcResult[calcResult.length-2] === outputValue) {          
-          setOutputValue('');
-          console.log('ono samoe');
-          setCalcResult(result=> [...result,buttonInput])
-        }        
-        setOutputValue(current=>(current === '0') ? buttonInput : current + buttonInput);     
-        console.log(buttonInput);
-        break;
-      case 'AC':
-        setOutputValue('0');
-        setOperation(undefined);
-        setCalcResult([]);
-        setCommaChecker(false);
-        break;
-      case '÷':
-      case 'x':
-      case '-':
-      case '+':                
-        setOperation(buttonInput);
-        setCalcResult(current=>[...current, outputValue,buttonInput]);                        
-        break;
-      case ',':
-        setCommaChecker(true);
-        setOutputValue(commaChecker ? outputValue : outputValue + buttonInput);
-        break;
-      case '=':
-        setOutputValue(eval(calcResult.join(' ').trim()));
-    }
-  }  
+          setOutputValue('');          
+        }
+        setCalcResult([...calcResult, buttonInput]); 
+        setOutputValue(current=>(current === '0') ? buttonInput : current + buttonInput);       
+        break;               
+        case 'AC':
+          setOutputValue('0');
+          setOperation(undefined);
+          setCalcResult([]);
+          setCommaChecker(false);
+          break;
+        case '÷':        
+        case 'x':         
+        case '-':        
+        case '+':
+          let formattedOperator = (buttonInput === 'x') ? '*' : (buttonInput === '÷') ? '/' : buttonInput;
+          if(calcResult.length >= 3) {
+            const res = eval(calcResult.join(' ')).toString();
+            setOutputValue(res);  
+            setCalcResult([res, formattedOperator]); 
+            break;
+          }        
+          if(Number(calcResult[calcResult.length-1]) || calcResult[calcResult.length-1] === undefined) {
+            setOperation(formattedOperator);
+            setCalcResult(current => [...current, formattedOperator]);          
+          }                       
+          break;
+        case ',':
+          setCommaChecker(true);
+          setOutputValue(commaChecker ? outputValue : outputValue + buttonInput);
+          break;
+        case '=':
+          if(calcResult.length >= 3) {
+            const res = eval(calcResult.join(' ')).toString();
+            setOutputValue(res);  
+            setCalcResult([res]);      
+          }
+          break;    
+      }
+    }  
+    
+    return (    
+      <SafeAreaView style={styles.container}>
+        <View style={styles.inputContainer}>
+          {console.log(calcResult)}
+          <Text style={styles.inputText}>{outputValue}</Text>
+        </View>
+        <View style={styles.buttonsContainer}>
+          {addAllButtons()}
+        </View>
+      </SafeAreaView>
+    );
+  }
   
-  return (    
-    <SafeAreaView style={styles.container}>
-      <View style={styles.inputContainer}>
-        <Text style={styles.inputText}>{outputValue}</Text>
-      </View>
-      <View style={styles.buttonsContainer}>
-        {addAllButtons()}
-      </View>
-    </SafeAreaView>
-  );
-}
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,    
-    backgroundColor: 'black',    
-  },  
-  inputContainer: {
-    justifyContent:'flex-end',
-    alignItems: 'flex-end',
-    flex: 2,
-    margin: 20,
-  },
-  inputText: {
-    fontSize: 60,
-    color:'white',
-    textAlign: 'right',
-  },
-  buttonsContainer: {
-    flex: 8,
-    margin: 10,    
-  },
-  buttonRow: {
-    flex: 1,    
-    flexDirection: 'row',
-    justifyContent: 'space-around',    
-  }  
-})
-
-export default MainScreen; 
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,    
+      backgroundColor: 'black',    
+    },  
+    inputContainer: {
+      justifyContent:'flex-end',
+      alignItems: 'flex-end',
+      flex: 2,
+      margin: 20,
+    },
+    inputText: {
+      fontSize: 60,
+      color:'white',
+      textAlign: 'right',
+    },
+    buttonsContainer: {
+      flex: 8,
+      margin: 10,    
+    },
+    buttonRow: {
+      flex: 1,    
+      flexDirection: 'row',
+      justifyContent: 'space-around',    
+    }  
+  })
+  
+  export default MainScreen; 
