@@ -9,14 +9,14 @@ const buttons = [
   ['7', '8', '9', 'x'],
   ['4', '5', '6', '-'],
   ['1', '2', '3', '+'],
-  ['0', ',', '=']
+  ['0', '.', '=']
 ]
 
 function MainScreen() {
   const [outputValue, setOutputValue] = useState('0');    
   const [operation, setOperation] = useState(undefined);
-  const [commaChecker, setCommaChecker] = useState(false);
-  const [calcResult, setCalcResult] = useState([]);  
+  const [pointChecker, setPointChecker] = useState(false);
+  const [calcResult, setCalcResult] = useState(''); 
 
   const addAllButtons = () => {
     let allButtons = buttons.map((buttonsRows, index) => {
@@ -35,6 +35,8 @@ function MainScreen() {
 
     return allButtons;
   }
+
+  useEffect(()=> console.log('da'),[])
   
   const handlerForButton = (buttonInput) => {
     switch (buttonInput) {
@@ -48,76 +50,95 @@ function MainScreen() {
       case '7':
       case '8':
       case '9':
-        if(outputValue.length >= 10) {
+        if(outputValue.length >= 10 && /^\d+$/.test(calcResult) || calcResult.length>20) {                  
           break;
         }
-        if(calcResult[calcResult.length-2] === outputValue) {          
-          setOutputValue('');
-          console.log('ono samoe');
-          setCalcResult(result=> [...result,buttonInput])
-        }        
-        setOutputValue(current=>(current === '0') ? buttonInput : current + buttonInput);     
-        console.log(buttonInput);
-        break;
-      case 'AC':
-        setOutputValue('0');
-        setOperation(undefined);
-        setCalcResult([]);
-        setCommaChecker(false);
-        break;
-      case '÷':
-      case 'x':
-      case '-':
-      case '+':                
-        setOperation(buttonInput);
-        setCalcResult(current=>[...current, outputValue,buttonInput]);                        
-        break;
-      case ',':
-        setCommaChecker(true);
-        setOutputValue(commaChecker ? outputValue : outputValue + buttonInput);
-        break;
-      case '=':
-        setOutputValue(eval(calcResult.join(' ').trim()));
-    }
-  }  
+        if(/[\+\-\*\/]/.test(calcResult[calcResult.length-1])) {          
+          setOutputValue('');          
+        }
+        setOutputValue(current=>(current === '0') ? buttonInput : current + buttonInput);               
+        setCalcResult(calcResult+buttonInput);         
+        break;               
+        case 'AC':
+          setOutputValue('0');
+          setOperation(undefined);
+          setCalcResult('');
+          setPointChecker(false);
+          break;
+        case '÷':        
+        case 'x':         
+        case '-':        
+        case '+':
+          let formattedOperator = (buttonInput === 'x') ? '*' : (buttonInput === '÷') ? '/' : buttonInput;
+          if(!/[\+\-\*\/]/.test(calcResult[calcResult.length-1])) {
+            setCalcResult(calcResult+formattedOperator)
+          }
+          if(/^\d+[\+\-\*\/]$/.test(calcResult)) {
+            setCalcResult(current=>current.substr(0, current.length - 1) + formattedOperator);
+          }
+          if(/^\d+[\+\-\*\/]\d+$/.test(calcResult)) {
+            let res = eval(calcResult.replace(/0*$/,"")).toString().substr(0,10);
+            setOutputValue(res);  
+            setCalcResult(res+formattedOperator); 
+            break;
+          }       
+          break;
+        case '.':
+          setPointChecker(true);          
+          setOutputValue(pointChecker ? outputValue : outputValue + buttonInput);
+          setCalcResult(pointChecker ? outputValue : outputValue + buttonInput)
+          break;
+        case '=':          
+          if(/^\d+\.?\d?[\+\-\*\/]\d+$/.test(calcResult) || /\d+/.test(calcResult)) {                                    
+            let res = eval(calcResult.replace(/0*$/,"")).toString();
+            if(calcResult.includes('.')) {
+              console.log('poimal')
+            }                       
+            setOutputValue(res);  
+            setCalcResult(res); 
+          break;    
+          }         
+      }
+    }  
+    
+    return (    
+      <SafeAreaView style={styles.container}>
+        <View style={styles.inputContainer}>
+          {console.log(calcResult)}
+          <Text style={styles.inputText}>{outputValue}</Text>
+        </View>
+        <View style={styles.buttonsContainer}>
+          {addAllButtons()}
+        </View>        
+      </SafeAreaView>
+    );
+  }
   
-  return (    
-    <SafeAreaView style={styles.container}>
-      <View style={styles.inputContainer}>
-        <Text style={styles.inputText}>{outputValue}</Text>
-      </View>
-      <View style={styles.buttonsContainer}>
-        {addAllButtons()}
-      </View>
-    </SafeAreaView>
-  );
-}
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,    
-    backgroundColor: 'black',    
-  },  
-  inputContainer: {
-    justifyContent:'flex-end',
-    alignItems: 'flex-end',
-    flex: 2,
-    margin: 20,
-  },
-  inputText: {
-    fontSize: 60,
-    color:'white',
-    textAlign: 'right',
-  },
-  buttonsContainer: {
-    flex: 8,
-    margin: 10,    
-  },
-  buttonRow: {
-    flex: 1,    
-    flexDirection: 'row',
-    justifyContent: 'space-around',    
-  }  
-})
-
-export default MainScreen; 
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,    
+      backgroundColor: 'black',    
+    },  
+    inputContainer: {
+      justifyContent:'flex-end',
+      alignItems: 'flex-end',
+      flex: 2,
+      margin: 20,
+    },
+    inputText: {
+      fontSize: 60,
+      color:'white',
+      textAlign: 'right',
+    },
+    buttonsContainer: {
+      flex: 8,
+      margin: 10,    
+    },
+    buttonRow: {
+      flex: 1,    
+      flexDirection: 'row',
+      justifyContent: 'space-around',    
+    }  
+  })
+  
+  export default MainScreen; 
